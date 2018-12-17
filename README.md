@@ -6,7 +6,7 @@
 
 PermissionsDispatcher provides a simple annotation-based API to handle runtime permissions.
 
-This library lifts the burden that comes with writing a bunch of check statements whether a permission has been granted or not from you, in order to keep your code clean and safe.
+The library lifts the burden that comes with writing a bunch of check statements whether a permission has been granted or not, in order to keep your code clean and safe.
 
 ## Usage
 
@@ -28,9 +28,9 @@ PermissionsDispatcher introduces only a few annotations, keeping its general API
 
 |Annotation|Required|Description|
 |---|---|---|
-|`@RuntimePermissions`|**✓**|Register an `Activity` or `Fragment`(we support both) to handle permissions|
+|`@RuntimePermissions`|**✓**|Register an `Activity` or `Fragment`to handle permissions|
 |`@NeedsPermission`|**✓**|Annotate a method which performs the action that requires one or more permissions|
-|`@OnShowRationale`||Annotate a method which explains why the permission/s is/are needed.|
+|`@OnShowRationale`||Annotate a method which explains why the permission/s is/are needed. To continue or abort the current permission request upon user input invoke generated methods(`proceedShowCameraPermissionRequest` and `cancelShowCameraPermissionRequest`).|
 |`@OnPermissionDenied`||Annotate a method which is invoked if the user doesn't grant the permissions|
 |`@OnNeverAskAgain`||Annotate a method which is invoked if the user chose to have the device "never ask again" about a permission|
 
@@ -47,13 +47,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @OnShowRationale(Manifest.permission.CAMERA)
-    void showRationaleForCamera(final PermissionRequest request) {
+    void showRationaleForCamera() {
         new AlertDialog.Builder(this)
             .setMessage(R.string.permission_camera_rationale)
-            .setPositiveButton(R.string.button_allow, (dialog, button) ->
-                MainActivityPermissionsDispatcher.proceedShowCameraPermissionRequest(MainActivity.this))
-            .setNegativeButton(R.string.button_deny, (dialog, button) ->
-                MainActivityPermissionsDispatcher.cancelShowCameraPermissionRequest(MainActivity.this))
+            .setPositiveButton(R.string.button_allow, (dialog, button) -> /* TODO */ )
+            .setNegativeButton(R.string.button_deny, (dialog, button) -> /* TODO */ )
             .show();
     }
 
@@ -81,15 +79,28 @@ protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     findViewById(R.id.button_camera).setOnClickListener(v -> {
-      // NOTE: delegate the permission handling to generated method
+      // delegate the permission handling to generated method
       MainActivityPermissionsDispatcher.showCameraWithPermissionCheck(this);
     });
+}
+
+@OnShowRationale(Manifest.permission.CAMERA)
+void showRationaleForCamera() {
+    new AlertDialog.Builder(this)
+        .setMessage(R.string.permission_camera_rationale)
+        .setPositiveButton(R.string.button_allow, (dialog, button) ->
+            // to proceed the permission reuqest invoke generated method
+            MainActivityPermissionsDispatcher.proceedShowCameraPermissionRequest(MainActivity.this))
+        .setNegativeButton(R.string.button_deny, (dialog, button) ->
+            // to cancel the permission reuqest invoke generated method
+            MainActivityPermissionsDispatcher.cancelShowCameraPermissionRequest(MainActivity.this))
+        .show();
 }
 
 @Override
 public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    // NOTE: delegate the permission handling to generated method
+    // delegate the permission handling to generated method
     MainActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
 }
 ```
